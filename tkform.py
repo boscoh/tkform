@@ -2,17 +2,13 @@
 # -*- coding: iso-8859-1 -*-
 
 """
-tkform provides a tkinter object that can be used as a
-GUI for a form that loads files, directories etc. and
-runs a command in python.
+tkform provides an HTML-inspired form-based GUI
+for Python scripts.
 
-Usage:
-
-if __name__ == "__main__":
-    app = PeptagramLoaderApp()
-    app.mainloop()
-
-    
+Includes
+- scrollable page
+- simple entry of params
+- reordable lists of files or directories
 """
 
 
@@ -61,8 +57,11 @@ class VerticalScrolledFrame(tk.Frame):
     self.canvas.bind('<Configure>', self._configure_canvas)
     self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
+    # pixels '2', millimeters '2m', centimeters '2c', or inches '2i'
+    self.canvas.configure(yscrollincrement='8')
+
   def _on_mousewheel(self, event):
-    self.canvas.yview_scroll(-event.delta, "units")
+    self.canvas.yview_scroll(-1*(event.delta), "units")
 
   def _configure_interior(self, event):
     # update the scrollbars to match the size of the inner frame
@@ -319,18 +318,24 @@ def askopenfilenames(*args, **kwargs):
   return fix_list(fnames)
 
 
+def exit():
+   tk.Tk().quit()
+
 
 class Form(tk.Tk):
   """
   Form window for Tkinter.
   """ 
-  def __init__(self, parent, width=700, height=800):
+  def __init__(self, title='', width=700, height=800, parent=None):
     self.parent = parent
     self.width = width
     self.height = height
 
     tk.Tk.__init__(self, parent)
+
     self.geometry("%dx%d" % (width, height))
+    if title:
+      self.title(title)
 
     self.vscroll_frame = VerticalScrolledFrame(self)
     self.vscroll_frame.pack(fill=tk.BOTH, expand=tk.TRUE)
@@ -441,7 +446,7 @@ class Form(tk.Tk):
     
   def clear_output(self):
     if self.output is None:
-      raise Exception("Output not initialized in WidgetManager")
+      raise Exception("Output not initialized in Form")
     self.output.configure(state=tk.NORMAL)
     self.output.delete(1.0, tk.END)
     self.output_str = ""
@@ -450,7 +455,7 @@ class Form(tk.Tk):
 
   def print_output(self, s, cmd_fn=None):
     if self.output is None:
-      raise Exception("Output not initialized in WidgetManager")
+      raise Exception("Output not initialized in Form")
     self.output.configure(state=tk.NORMAL)
     if cmd_fn:
       link = HyperlinkManager(self.output)
@@ -465,16 +470,18 @@ class Form(tk.Tk):
     self.push_button('submit', self.submit)
 
   def submit(self):
-    self.clear_output()
+    if self.output is not None:
+      self.clear_output()
     try:
       params = self.get_params()
-      self.print_output(str(params) + '\n')
       self.run(params)
     except:
-      s = "\nTHERE WERE ERROR(S) IN PROCESSING THE PYTHON.\n"
-      s += "Specific error described in the last line:\n\n"
-      s += traceback.format_exc()
-      self.print_output(s)
+      if self.output is not None:
+        s = "\nTHERE WERE ERROR(S) IN PROCESSING THE PYTHON.\n"
+        s += "Specific error described in the last line:\n\n"
+        s += traceback.format_exc()
+        s += "\n"
+        self.print_output(s)
 
   def run(self, params):
     """
