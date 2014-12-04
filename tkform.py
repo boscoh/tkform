@@ -62,7 +62,7 @@ class VerticalScrolledFrame(tk.Frame):
     self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
   def _on_mousewheel(self, event):
-    self.canvas.yview_scroll(-1*(event.delta), "units")
+    self.canvas.yview_scroll(-event.delta, "units")
 
   def _configure_interior(self, event):
     # update the scrollbars to match the size of the inner frame
@@ -313,7 +313,7 @@ def fix_list(tcl_list):
 def askopenfilenames(*args, **kwargs):
   """
   Wrap the askopenfilenames dialog to fix the fname list return
-  for Windows, which does not return a list.
+  for Windows, which returns a formatted string, not a list.
   """
   fnames = tkFileDialog.askopenfilenames(*args, **kwargs)
   return fix_list(fnames)

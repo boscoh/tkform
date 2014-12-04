@@ -5,11 +5,11 @@ description = "Docs at http://github.com/boscoh/tkform"
 
 setup(
     name='tkform',
-    version='1.0',
+    version='0.9',
     author='Bosco Ho',
     author_email='boscoh@gmail.com',
     url='http://github.com/boscoh/tkform',
-    description='a utility form interface to python scripts',
+    description='a form-based GUI interface using tkinter to python scripts',
     long_description=description,
     license='BSD',
     install_requires=[],
