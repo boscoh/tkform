@@ -4,7 +4,6 @@
 
 import os
 import glob
-import sys
 import json
 
 import tkform
@@ -38,7 +37,7 @@ class ExampleForm(tkform.Form):
     tkform.Form.__init__(self, 'Example Form', width, height)
 
     # add text
-    self.push_text("tkform Example", 30)
+    self.push_text("Example with tkform to calculate filesize", 30)
     
     # add space between rows
     self.push_spacer()
@@ -134,6 +133,8 @@ class ExampleForm(tkform.Form):
 
     self.print_output('\n\n')
 
+    # add a text link
+    self.print_output('Example of link: ')
     self.print_output('Close window', tkform.exit)
 
 

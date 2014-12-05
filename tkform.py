@@ -204,10 +204,11 @@ class FileListLoader(tk.Frame):
     return [(e.fname, e.label_stringvar.get()) for e in self.entries]
 
 
+
 class HyperlinkManager:
   """
-  A link object to insert into a text object, which can
-  trigger a Python command.
+  Manager of links that can be clicked in a text object.
+  Maintains linkages between mouse interactions and commands.
 
   http://effbot.org/zone/tkinter-text-hyperlink.htm
   """
@@ -223,9 +224,8 @@ class HyperlinkManager:
   def reset(self):
     self.links = {}
 
-  def add(self, action):
-    # add an action to the manager.  returns tags to use in
-    # associated text widget
+  def add_new_link(self, action):
+    "Returns tag for link to use in tk.Text widget"
     tag = "hyper-%d" % len(self.links)
     self.links[tag] = action
     return "hyper", tag
@@ -318,8 +318,10 @@ def askopenfilenames(*args, **kwargs):
   return fix_list(fnames)
 
 
+
 def exit():
    tk.Tk().quit()
+
 
 
 class Form(tk.Tk):
@@ -345,6 +347,7 @@ class Form(tk.Tk):
 
     self.output = None
     self.output_str = ''
+    self.output_link_manager = None
 
     self.i_row = 0
 
@@ -440,7 +443,10 @@ class Form(tk.Tk):
     return params
 
   def push_output(self):
+    if self.output is not None:
+      raise Error('Error: push_output has been called more than once!')
     self.output = tk.Text(self.interior, state=tk.DISABLED)
+    self.output_link_manager = HyperlinkManager(self.output)
     self.push_row(self.output)
     return self.output
     
@@ -458,11 +464,11 @@ class Form(tk.Tk):
       raise Exception("Output not initialized in Form")
     self.output.configure(state=tk.NORMAL)
     if cmd_fn:
-      link = HyperlinkManager(self.output)
-      callback = link.add(cmd_fn)
-      self.output.insert(tk.INSERT, s, callback)
+      link_tag = self.output_link_manager.add_new_link(cmd_fn)
+      self.output.insert(tk.INSERT, s, link_tag)
     else:
       self.output.insert(tk.INSERT, s)
+    self.output_str += s
     self.update()
     self.output.configure(state=tk.DISABLED)
 
@@ -484,8 +490,8 @@ class Form(tk.Tk):
         self.print_output(s)
 
   def run(self, params):
-    """
-    Dummy method to override.
-    """
+    "Dummy method to be overriden or replaced."
     pass
+
+
 
