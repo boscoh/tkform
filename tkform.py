@@ -37,11 +37,16 @@ class VerticalScrolledFrame(tk.Frame):
     # create a canvas object and a vertical scrollbar for scrolling it
     vscrollbar = tk.Scrollbar(self, orient=tk.VERTICAL)
     vscrollbar.pack(fill=tk.Y, side=tk.RIGHT, expand=tk.FALSE)
+    hscrollbar = tk.Scrollbar(self, orient=tk.HORIZONTAL)
+    hscrollbar.pack(fill=tk.X, side=tk.BOTTOM, expand=tk.FALSE)
+
     self.canvas = tk.Canvas(
         self, bd=0, highlightthickness=0,
-        yscrollcommand=vscrollbar.set)
+        yscrollcommand=vscrollbar.set,
+        xscrollcommand=hscrollbar.set)
     self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.TRUE)
     vscrollbar.config(command=self.canvas.yview)
+    hscrollbar.config(command=self.canvas.xview)
 
     # reset the view
     self.canvas.xview_moveto(0)
@@ -344,12 +349,11 @@ class Form(tk.Tk):
 
     self.interior = self.vscroll_frame.interior
     self.interior.configure(bd=30)
+    self.i_row = 0
 
     self.output = None
     self.output_str = ''
     self.output_link_manager = None
-
-    self.i_row = 0
 
     self.param_entries = collections.OrderedDict()
      
@@ -360,22 +364,18 @@ class Form(tk.Tk):
   def push_text(self, text, fontsize=12):
     label = tk.Label(self.interior, font=('defaultFont', fontsize), text=text)
     self.push_row(label)
-    return label
 
   def push_spacer(self, height=1):
     label = tk.Label(self.interior, height=height)
     self.push_row(label)
-    return label
 
-  def push_line(self):
-    canvas = tk.Canvas(self.interior, width=500, height=1, bg="#999999")
+  def push_line(self, width=500, height=1, color="#999999"):
+    canvas = tk.Canvas(self.interior, width=width, height=height, bg=color)
     self.push_row(canvas)
-    return canvas
 
   def push_button(self, text, command_fn):
     button = tk.Button(self.interior, text=text, command=command_fn)
     self.push_row(button)
-    return button
 
   def push_labeled_param(
       self, param_id, text, entry_text='', 
@@ -385,7 +385,6 @@ class Form(tk.Tk):
         load_dir_text=load_dir_text)
     self.push_row(entry)
     self.param_entries[param_id] = entry
-    return entry
 
   def push_file_list_param(self, param_id, load_file_text='', load_dir_text=''):
     file_list_loader = FileListLoader(self.interior)
@@ -411,8 +410,6 @@ class Form(tk.Tk):
 
     self.param_entries[param_id] = file_list_loader
 
-    return file_list_loader
-
   def push_checkbox_param(self, param_id, text, init_val='1'):
     int_var = tk.IntVar()
     int_var.set(init_val)
@@ -420,7 +417,6 @@ class Form(tk.Tk):
         self.interior, text=text, variable=int_var)
     self.push_row(check_button)
     self.param_entries[param_id] = int_var
-    return int_var
 
   def push_radio_param(self, param_id, text_list, init_val=0):
     int_var = tk.IntVar()
@@ -434,7 +430,6 @@ class Form(tk.Tk):
     for button in buttons:
       self.push_row(button)
     self.param_entries[param_id] = int_var
-    return int_var
 
   def get_params(self):
     params = collections.OrderedDict()
@@ -448,7 +443,6 @@ class Form(tk.Tk):
     self.output = tk.Text(self.interior, state=tk.DISABLED)
     self.output_link_manager = HyperlinkManager(self.output)
     self.push_row(self.output)
-    return self.output
     
   def clear_output(self):
     if self.output is None:
@@ -463,7 +457,7 @@ class Form(tk.Tk):
     if self.output is None:
       raise Exception("Output not initialized in Form")
     self.output.configure(state=tk.NORMAL)
-    if cmd_fn:
+    if cmd_fn is not None:
       link_tag = self.output_link_manager.add_new_link(cmd_fn)
       self.output.insert(tk.INSERT, s, link_tag)
     else:
@@ -472,8 +466,9 @@ class Form(tk.Tk):
     self.update()
     self.output.configure(state=tk.DISABLED)
 
-  def push_submit(self):
-    self.push_button('submit', self.submit)
+  def run(self, params):
+    "Dummy method to be overriden/replaced."
+    pass
 
   def submit(self):
     if self.output is not None:
@@ -489,9 +484,8 @@ class Form(tk.Tk):
         s += "\n"
         self.print_output(s)
 
-  def run(self, params):
-    "Dummy method to be overriden or replaced."
-    pass
+  def push_submit(self):
+    self.push_button('submit', self.submit)
 
 
 

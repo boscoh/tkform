@@ -30,10 +30,9 @@ def size_str(*fnames):
 
 
 class ExampleForm(tkform.Form):
-  """
-  Application window for Tkinter.
-  """ 
+
   def __init__(self, width=700, height=800):
+    
     tkform.Form.__init__(self, 'Example Form', width, height)
 
     # add text
@@ -45,15 +44,10 @@ class ExampleForm(tkform.Form):
     self.push_line()
 
     # add a file loading list object
-    self.push_text("Multiple file list loader:", 16)
+    self.push_text("Params for Reorderable Lists", 16)
     self.push_file_list_param(
         'files_and_labels',
         load_file_text='+ files')
-
-    self.push_spacer()
-    self.push_line()
-
-    self.push_text("Multiple directory loader:", 16)
     self.push_file_list_param(
         'dirs_and_labels',
         load_dir_text='+ directory')
@@ -62,24 +56,15 @@ class ExampleForm(tkform.Form):
     self.push_line()
 
     # some text labels
-    self.push_text("Labeled (file/directory) entries:", 16)
+    self.push_text("More Params", 16)
     self.push_labeled_param(
-        'label1', 'enter a value for label1', 'label')
+        'label1', 'Enter label1', 'label')
     self.push_labeled_param(
         'file2', 'enter file2', 'default_file', load_file_text='select')
     self.push_labeled_param(
-        'dir3', 'enter dir3', 'default_dir', load_dir_text='select')
-
-    self.push_spacer()
-    self.push_line()
-
-    self.push_text("Checkbox:", 16)
-    self.push_checkbox_param('check4', 'check this box, or not')
-
-    self.push_spacer()
-    self.push_line()
-
-    self.push_text("Radio Button:", 16)
+        'dir3', 'Enter dir3', 'default_dir', load_dir_text='select')
+    self.push_checkbox_param('check4', '(Un)check this checkbox')
+    self.push_text("Choose a radio button:")
     self.push_radio_param(
         'radio5',
         ['choice 0', 
@@ -90,13 +75,8 @@ class ExampleForm(tkform.Form):
     self.push_spacer()
     self.push_line()
 
-    self.push_text("Click here to run script", 16)
-    self.push_submit()
-
-    self.push_spacer()
-    self.push_line()
-
     self.push_text("Output", 16)
+    self.push_submit()
 
     # Must register the output if you want to
     # display output during the execution of your commands
@@ -139,9 +119,8 @@ class ExampleForm(tkform.Form):
 
 
 
-if __name__ == "__main__":
-    form = ExampleForm(700, 900)
-    form.mainloop()
+
+ExampleForm(700, 900).mainloop()
 
 
 
