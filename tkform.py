@@ -16,6 +16,7 @@ import os
 import traceback
 import re
 import collections
+
 import Tkinter as tk
 import tkFileDialog
 
@@ -83,6 +84,16 @@ class VerticalScrolledFrame(tk.Frame):
 
 
 
+def is_contains_event(event, widget):
+    x, y = event.x_root, event.y_root
+    y0 = widget.winfo_rooty()
+    y1 = widget.winfo_height() + y0
+    x0 = widget.winfo_rootx()
+    x1 = widget.winfo_width() + x0
+    return y0 <= y <= y1 and x0 <= x <= x1
+    
+
+
 class FileEntryForFileList():
   """
   A row that holds a file entry and be draggable by mouse.
@@ -121,14 +132,8 @@ class FileEntryForFileList():
     y1 = self.num_widget.winfo_height() + y0
     return y0 <= y <= y1
 
-  def in_grab_char(self, event):
-    x, y = event.x_root, event.y_root
-    y0 = self.num_widget.winfo_rooty()
-    y1 = self.num_widget.winfo_height() + y0
-    x0 = self.num_widget.winfo_rootx()
-    x1 = self.num_widget.winfo_width() + x0
-    return y0 <= y <= y1 and x0 <= x <= x1
-
+  def contains_event(self, event):
+    return is_contains_event(event, self.num_widget)
 
 
 class FileListLoader(tk.Frame):
@@ -173,9 +178,12 @@ class FileListLoader(tk.Frame):
 
   def get_i_from_xy(self, event):
     for i, entry in enumerate(self.entries):
-      if entry.in_grab_char(event):
+      if entry.contains_event(event):
         return i
     return -1
+
+  def contains_event(self, event):
+    return is_contains_event(event, self)
 
   def mouse_down(self, event):
     self.i_select = self.get_i_from_xy(event)
@@ -356,7 +364,31 @@ class Form(tk.Tk):
     self.output_link_manager = None
 
     self.param_entries = collections.OrderedDict()
-     
+
+    self.widgets = []
+    self.bind('<Button-1>', self.mouse_down) 
+    self.bind('<B1-Motion>', self.mouse_drag) 
+    self.bind('<ButtonRelease-1>', self.mouse_up) 
+
+  def contains_event(self, event):
+    return is_contains_event(event, self)
+
+  def mouse_down(self, event):
+    print "Mouse down"
+    for widget in reversed(self.widgets):
+      if widget.contains_event(event):
+        widget.mouse_down(event)
+
+  def mouse_up(self, event):
+    for widget in reversed(self.widgets):
+      if widget.contains_event(event):
+        widget.mouse_up(event)
+
+  def mouse_drag(self, event):
+    for widget in reversed(self.widgets):
+      if widget.contains_event(event):
+        widget.mouse_drag(event)
+
   def push_row(self, widget):
     self.i_row += 1
     widget.grid(row=self.i_row, column=0, sticky=tk.W)
@@ -404,9 +436,11 @@ class Form(tk.Tk):
       self.push_row(load_dir_button)
 
     self.push_row(file_list_loader)
-    self.bind('<Button-1>', file_list_loader.mouse_down) 
-    self.bind('<B1-Motion>', file_list_loader.mouse_drag) 
-    self.bind('<ButtonRelease-1>', file_list_loader.mouse_up) 
+
+    self.widgets.append(file_list_loader)
+    # self.bind('<Button-1>', file_list_loader.mouse_down) 
+    # self.bind('<B1-Motion>', file_list_loader.mouse_drag) 
+    # self.bind('<ButtonRelease-1>', file_list_loader.mouse_up) 
 
     self.param_entries[param_id] = file_list_loader
 
