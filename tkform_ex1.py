@@ -37,11 +37,10 @@ class ExampleForm(tkform.Form):
 
     # add text
     self.push_text("Example with tkform to calculate filesize", 30)
-    
-    # add space between rows
-    self.push_spacer()
     # add dividing line
     self.push_line()
+    # add space between rows
+    self.push_spacer()
 
     # add a file loading list object
     self.push_text("Params for Reorderable Lists", 16)
@@ -60,7 +59,7 @@ class ExampleForm(tkform.Form):
     self.push_labeled_param(
         'label1', 'Enter label1', 'label')
     self.push_labeled_param(
-        'file2', 'enter file2', 'default_file', load_file_text='select')
+        'file2', 'Enter file2', 'default_file', load_file_text='select')
     self.push_labeled_param(
         'dir3', 'Enter dir3', 'default_dir', load_dir_text='select')
     self.push_checkbox_param('check4', '(Un)check this checkbox')

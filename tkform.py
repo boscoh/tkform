@@ -84,7 +84,7 @@ class VerticalScrolledFrame(tk.Frame):
 
 
 
-def is_contains_event(event, widget):
+def is_event_in_widget(event, widget):
     x, y = event.x_root, event.y_root
     y0 = widget.winfo_rooty()
     y1 = widget.winfo_height() + y0
@@ -94,10 +94,10 @@ def is_contains_event(event, widget):
     
 
 
-class FileEntryForFileList():
+class LabeledEntryForList():
   """
-  A row that holds a file entry and be draggable by mouse.
-  This works intimately with FileListLoader.
+  A row that holds a labeld entry and be draggable by mouse.
+  This works intimately with ReorderableLabeledList.
   """
   def __init__(self, parent, fname, label):
     self.parent = parent
@@ -133,21 +133,20 @@ class FileEntryForFileList():
     return y0 <= y <= y1
 
   def contains_event(self, event):
-    return is_contains_event(event, self.num_widget)
+    return is_event_in_widget(event, self.num_widget)
 
 
-class FileListLoader(tk.Frame):
+
+class ReorderableLabeledList(tk.Frame):
   def __init__(self, parent):
     self.parent = parent
     tk.Frame.__init__(self, parent)
     self.grid()
     self.entries = []
 
-  def add_fnames(self, fnames):
-    for fname in fnames:
-      label = os.path.basename(fname)
-      xml_param = FileEntryForFileList(self, fname, label)
-      self.entries.append(xml_param)
+  def add_entry_label(self, entry, label):
+    param = LabeledEntryForList(self, entry, label)
+    self.entries.append(param)
     self.clear_frame()
     self.build_frame()
 
@@ -183,7 +182,7 @@ class FileListLoader(tk.Frame):
     return -1
 
   def contains_event(self, event):
-    return is_contains_event(event, self)
+    return is_event_in_widget(event, self)
 
   def mouse_down(self, event):
     self.i_select = self.get_i_from_xy(event)
@@ -357,7 +356,7 @@ class Form(tk.Tk):
 
     self.interior = self.vscroll_frame.interior
     self.interior.configure(bd=30)
-    self.i_row = 0
+    self.i_row_interior = 0
 
     self.output = None
     self.output_str = ''
@@ -365,33 +364,29 @@ class Form(tk.Tk):
 
     self.param_entries = collections.OrderedDict()
 
-    self.widgets = []
+    self.mouse_widgets = []
     self.bind('<Button-1>', self.mouse_down) 
     self.bind('<B1-Motion>', self.mouse_drag) 
     self.bind('<ButtonRelease-1>', self.mouse_up) 
 
-  def contains_event(self, event):
-    return is_contains_event(event, self)
-
   def mouse_down(self, event):
-    print "Mouse down"
-    for widget in reversed(self.widgets):
+    for widget in reversed(self.mouse_widgets):
       if widget.contains_event(event):
         widget.mouse_down(event)
 
   def mouse_up(self, event):
-    for widget in reversed(self.widgets):
+    for widget in reversed(self.mouse_widgets):
       if widget.contains_event(event):
         widget.mouse_up(event)
 
   def mouse_drag(self, event):
-    for widget in reversed(self.widgets):
+    for widget in reversed(self.mouse_widgets):
       if widget.contains_event(event):
         widget.mouse_drag(event)
 
   def push_row(self, widget):
-    self.i_row += 1
-    widget.grid(row=self.i_row, column=0, sticky=tk.W)
+    self.i_row_interior += 1
+    widget.grid(row=self.i_row_interior, column=0, sticky=tk.W)
 
   def push_text(self, text, fontsize=12):
     label = tk.Label(self.interior, font=('defaultFont', fontsize), text=text)
@@ -419,30 +414,26 @@ class Form(tk.Tk):
     self.param_entries[param_id] = entry
 
   def push_file_list_param(self, param_id, load_file_text='', load_dir_text=''):
-    file_list_loader = FileListLoader(self.interior)
+    file_list = ReorderableLabeledList(self.interior)
 
     if load_file_text:
       def load_file():
         fnames = askopenfilenames(title=load_file_text)
-        file_list_loader.add_fnames(fnames)
+        for fname in fnames:
+          file_list.add_entry_label(fname, os.path.basename(fname))
       load_files_button = tk.Button(self.interior, text=load_file_text, command=load_file)
       self.push_row(load_files_button)
 
     if load_dir_text:
       def load_dir():
-        dir_list = tkFileDialog.askdirectory(title=load_dir_text)
-        file_list_loader.add_fnames([dir_list])
+        the_dir = tkFileDialog.askdirectory(title=load_dir_text)
+        file_list.add_entry_label(the_dir, os.path.basename(the_dir))
       load_dir_button = tk.Button(self.interior, text=load_dir_text, command=load_dir)
       self.push_row(load_dir_button)
 
-    self.push_row(file_list_loader)
-
-    self.widgets.append(file_list_loader)
-    # self.bind('<Button-1>', file_list_loader.mouse_down) 
-    # self.bind('<B1-Motion>', file_list_loader.mouse_drag) 
-    # self.bind('<ButtonRelease-1>', file_list_loader.mouse_up) 
-
-    self.param_entries[param_id] = file_list_loader
+    self.push_row(file_list)
+    self.mouse_widgets.append(file_list)
+    self.param_entries[param_id] = file_list
 
   def push_checkbox_param(self, param_id, text, init_val='1'):
     int_var = tk.IntVar()
@@ -504,6 +495,14 @@ class Form(tk.Tk):
     "Dummy method to be overriden/replaced."
     pass
 
+  def print_exception(self):
+    if self.output is not None:
+      s = "\nTHERE WERE ERROR(S) IN PROCESSING THE PYTHON.\n"
+      s += "Specific error described in the last line:\n\n"
+      s += traceback.format_exc()
+      s += "\n"
+      self.print_output(s)
+
   def submit(self):
     if self.output is not None:
       self.clear_output()
@@ -511,12 +510,7 @@ class Form(tk.Tk):
       params = self.get_params()
       self.run(params)
     except:
-      if self.output is not None:
-        s = "\nTHERE WERE ERROR(S) IN PROCESSING THE PYTHON.\n"
-        s += "Specific error described in the last line:\n\n"
-        s += traceback.format_exc()
-        s += "\n"
-        self.print_output(s)
+      self.print_exception()
 
   def push_submit(self):
     self.push_button('submit', self.submit)
