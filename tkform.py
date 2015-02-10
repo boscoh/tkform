@@ -53,7 +53,7 @@ class VerticalScrolledFrame(tk.Frame):
     self.canvas.xview_moveto(0)
     self.canvas.yview_moveto(0)
 
-    # create a frame inside the canvas which will be scrolled with it
+    # create a frame inside the canvas which will be scrolled 
     self.interior = tk.Frame(self.canvas)
     self.interior_id = self.canvas.create_window(
         0, 0, window=self.interior, anchor=tk.NW)
@@ -99,31 +99,42 @@ class LabeledEntryForList():
   A row that holds a labeld entry and be draggable by mouse.
   This works intimately with ReorderableLabeledList.
   """
-  def __init__(self, parent, fname, label):
+  def __init__(self, parent, fname, label=None):
     self.parent = parent
-    self.fname = fname
-    self.label_stringvar = tk.StringVar()
-    self.label_stringvar.set(label)
-    self.fname_widget = tk.Label(parent, text=self.fname)
-    self.label_widget = tk.Entry(parent, textvariable=self.label_stringvar)
-    self.delete_widget = tk.Label(parent, text="x")
+
     self.num_stringvar = tk.StringVar()
     self.num_stringvar.set('')
     self.num_widget = tk.Label(parent, textvariable=self.num_stringvar)
+
+    self.fname = fname
+    self.fname_widget = tk.Label(parent, text=self.fname)
+
+    self.label = label
+    self.label_stringvar = tk.StringVar()
+    if self.label is None:
+      self.label_stringvar.set('')
+    else:
+      self.label_stringvar.set(label)
+      self.label_widget = tk.Entry(parent, textvariable=self.label_stringvar)
+
+    self.delete_widget = tk.Label(parent, text="x")
+
 
   def add_to_grid(self, j):
     self.num_stringvar.set(u'\u2195')
     self.j = j
     self.num_widget.grid(column=0,row=j,sticky='W')
     self.fname_widget.grid(column=1,row=j,sticky='W')
-    self.label_widget = tk.Entry(self.parent, textvariable=self.label_stringvar)
-    self.label_widget.grid(column=2,row=j,sticky='W')
+    if self.label is not None:
+      self.label_widget = tk.Entry(self.parent, textvariable=self.label_stringvar)
+      self.label_widget.grid(column=2,row=j,sticky='W')
     self.delete_widget.grid(column=3,row=j,sticky='W')
  
   def grid_forget(self):
     self.fname_widget.grid_forget()
     self.delete_widget.grid_forget()
-    self.label_widget.destroy()
+    if self.label is not None:
+      self.label_widget.destroy()
     self.num_widget.grid_forget()
 
   def in_y(self, event):
@@ -138,13 +149,20 @@ class LabeledEntryForList():
 
 
 class ReorderableLabeledList(tk.Frame):
+  """
+  This is a table that contains rows of LabeledEntryForList. The rows
+  - can be reordered by dragging on the arrow character on
+  the left
+  - deleted by clicking on the x on the right
+  - dynamically added to through `add_entry_label`
+  """
   def __init__(self, parent):
     self.parent = parent
     tk.Frame.__init__(self, parent)
     self.grid()
     self.entries = []
 
-  def add_entry_label(self, entry, label):
+  def add_entry_label(self, entry, label=None):
     param = LabeledEntryForList(self, entry, label)
     self.entries.append(param)
     self.clear_frame()
@@ -221,10 +239,8 @@ class HyperlinkManager:
   """
   Manager of links that can be clicked in a text object.
   Maintains linkages between mouse interactions and commands.
-
-  http://effbot.org/zone/tkinter-text-hyperlink.htm
+  From http://effbot.org/zone/tkinter-text-hyperlink.htm
   """
-
   def __init__(self, text):
     self.text = text
     self.text.tag_config("hyper", foreground="blue", underline=1)
@@ -332,14 +348,43 @@ def askopenfilenames(*args, **kwargs):
 
 
 def exit():
-   tk.Tk().quit()
+  """
+  Convenience function to close Tkinter.
+  """
+  tk.Tk().quit()
 
 
 
 class Form(tk.Tk):
   """
-  Form window for Tkinter.
+  A Form to collect parameters for running scripts in Python.
+
+  Parameters are created in the initialization with:
+  - push_labeled_param
+  - push_checkbox_param
+  - push_radio_param
+  - push_file_list_param
+
+  `get_params` will return the current set parameters, this is normally
+  set as a callback from the submit button.
+  
+  For decorative purposes, use:
+  - push_text
+  - push_spacer
+
+  A submit button to trigger the form
+
+  Other buttons can be added with Pythonic callbacks:
+  - push_button
+  
+  Creates a hyperlinkManager instance to allow links to appear in the form.
+
+  Keeps track of child mouse_widgets to send mouse events.
+
+  Creates an (optional) text output area to pipe messages from the running
+  of the script.
   """ 
+  
   def __init__(self, title='', width=700, height=800, parent=None):
     self.parent = parent
     self.width = width
@@ -413,21 +458,31 @@ class Form(tk.Tk):
     self.push_row(entry)
     self.param_entries[param_id] = entry
 
-  def push_file_list_param(self, param_id, load_file_text='', load_dir_text=''):
+  def push_file_list_param(
+      self, param_id, load_file_text='', load_dir_text='',
+      is_label=True):
     file_list = ReorderableLabeledList(self.interior)
 
     if load_file_text:
       def load_file():
         fnames = askopenfilenames(title=load_file_text)
         for fname in fnames:
-          file_list.add_entry_label(fname, os.path.basename(fname))
+          if is_label:
+            label = os.path.basename(fname)
+          else:
+            label = None
+          file_list.add_entry_label(fname, label)
       load_files_button = tk.Button(self.interior, text=load_file_text, command=load_file)
       self.push_row(load_files_button)
 
     if load_dir_text:
       def load_dir():
         the_dir = tkFileDialog.askdirectory(title=load_dir_text)
-        file_list.add_entry_label(the_dir, os.path.basename(the_dir))
+        if is_label:
+          label = os.path.basename(the_dir)
+        else:
+          label = None
+        file_list.add_entry_label(the_dir, label)
       load_dir_button = tk.Button(self.interior, text=load_dir_text, command=load_dir)
       self.push_row(load_dir_button)
 
