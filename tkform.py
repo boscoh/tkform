@@ -117,8 +117,7 @@ class LabeledEntryForList():
       self.label_stringvar.set(label)
       self.label_widget = tk.Entry(parent, textvariable=self.label_stringvar)
 
-    self.delete_widget = tk.Label(parent, text="x")
-
+    self.delete_widget = tk.Label(parent, text="  x")
 
   def add_to_grid(self, j):
     self.num_stringvar.set(u'\u2195')
@@ -387,10 +386,15 @@ class Form(tk.Tk):
   
   def __init__(self, title='', width=700, height=800, parent=None):
     self.parent = parent
-    self.width = width
-    self.height = height
-
     tk.Tk.__init__(self, parent)
+
+    if width < 0:
+      width = self.winfo_screenwidth() + width
+    self.width = width
+
+    if height < 0:
+      height = self.winfo_screenheight() + height
+    self.height = height
 
     self.geometry("%dx%d" % (width, height))
     if title:
