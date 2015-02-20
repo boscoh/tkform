@@ -463,32 +463,37 @@ class Form(tk.Tk):
     self.param_entries[param_id] = entry
 
   def push_file_list_param(
-      self, param_id, load_file_text='', load_dir_text='',
-      is_label=True):
+      self, param_id, load_file_text, is_label=True):
     file_list = ReorderableLabeledList(self.interior)
 
-    if load_file_text:
-      def load_file():
-        fnames = askopenfilenames(title=load_file_text)
-        for fname in fnames:
-          if is_label:
-            label = os.path.basename(fname)
-          else:
-            label = None
-          file_list.add_entry_label(fname, label)
-      load_files_button = tk.Button(self.interior, text=load_file_text, command=load_file)
-      self.push_row(load_files_button)
-
-    if load_dir_text:
-      def load_dir():
-        the_dir = tkFileDialog.askdirectory(title=load_dir_text)
+    def load_file():
+      fnames = askopenfilenames(title=load_file_text)
+      for fname in fnames:
         if is_label:
-          label = os.path.basename(the_dir)
+          label = os.path.basename(fname)
         else:
           label = None
-        file_list.add_entry_label(the_dir, label)
-      load_dir_button = tk.Button(self.interior, text=load_dir_text, command=load_dir)
-      self.push_row(load_dir_button)
+        file_list.add_entry_label(fname, label)
+    load_files_button = tk.Button(self.interior, text=load_file_text, command=load_file)
+    self.push_row(load_files_button)
+
+    self.push_row(file_list)
+    self.mouse_widgets.append(file_list)
+    self.param_entries[param_id] = file_list
+
+  def push_dir_list_param(
+      self, param_id, load_dir_text, is_label=True):
+    file_list = ReorderableLabeledList(self.interior)
+
+    def load_dir():
+      the_dir = tkFileDialog.askdirectory(title=load_dir_text)
+      if is_label:
+        label = os.path.basename(the_dir)
+      else:
+        label = None
+      file_list.add_entry_label(the_dir, label)
+    load_dir_button = tk.Button(self.interior, text=load_dir_text, command=load_dir)
+    self.push_row(load_dir_button)
 
     self.push_row(file_list)
     self.mouse_widgets.append(file_list)

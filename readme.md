@@ -2,7 +2,7 @@
 
 # tkform
 
-`tkform` wraps an elegant form-based GUI around Python scripts with standard Python.
+`tkform` wraps an elegant form-based GUI around Python scripts using only standard Python.
 
 ### Screenshot
 
@@ -107,16 +107,24 @@ The form will return a dictionary where each key/value pair is determined by wha
 
 _Parameters_.  Available param types are defined by these methods:
 
-- multiple file/directory list loader
+- multiple file list loader
 
-        push_file_list_param(param_id, load_file_text='', load_dir_text='', is_label=True)
+        push_file_list_param(param_id, load_file_text, is_label=True)
 
-    This creates a button, which, when clicked, triggers an open file or an open directory dialog box. Files/directories chosen here will pop up in a table of files. This table of files can be reordered, the file entries can be given an optional label as determined by the `is_label` flag, and the file entries can be removed. Depending on whether `load_file_text` or `load_dir_text` has a string.
+    This creates a button, which, when clicked, triggers an open file dialog box to chose multiple files. Files chosen here will pop up in a table of files. This table of files can be reordered. The file entries can be given an optional label as determined by the `is_label` flag. As well, the file entries can be removed. 
+
+- directory list loader
+
+        push_file_dir_param(param_id, load_dir_text, is_label=True)
+
+    This is similar to `push_file_list_param` above except it opens directories. Unfortunately tkinter only allows you to select one directory at a time.
+
 - check box
 
         push_checkbox_param(param_id, text, init_val='1')
 
     This creates a checkbox that will return a string `1` if selected, and `0` otherwise.
+
 - radio button
 
          push_radio_param(param_id, text_list, init_val=0)
@@ -223,6 +231,7 @@ This takes a params dictionary, and for output, it writes to the function print_
 
 And `main_processing` lends itself to take in arguments from the command-line parameters.
         
+It's useful to wrap the python script with a unix shell script or a Windows batch file so that the end-user can double-click in the file manager.
 
 &copy; 2015, Bosco K ho.
 
