@@ -4,7 +4,7 @@
 
 `tkform` wraps an elegant form-based GUI around Python scripts using only standard Python.
 
-### Screenshot
+![](./screenshot.png)
 
 ## Quick Start
 
@@ -51,7 +51,7 @@ A quick-and-dirty form can be instantiated and populated on the fly. :
 Let's populate the form with a header, file/dir list parameter:
 
     form.push_text(title, 20)
-    form.push_file_list_param('files_and_labels', load_file_text='+ files')
+    form.push_file_list_param('files_and_labels', '+ files')
 
 Then add the crucial submit button:
 

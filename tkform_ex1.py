@@ -37,9 +37,7 @@ form.push_text(title, 20)
 # And a loader for multiple files, registers a 
 # param with the dictionary key 'files_and_labels'
 # this will be returned as params in the 'run' funtion
-form.push_file_list_param(
-    'files_and_labels', 
-    load_file_text='+ files')
+form.push_file_list_param('files_and_labels', '+ files')
 
 # Must register the submit button
 form.push_submit()

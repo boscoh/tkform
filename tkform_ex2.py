@@ -44,12 +44,8 @@ class ExampleForm(tkform.Form):
 
     # add a file loading list object
     self.push_text("Params for Reorderable Lists", 16)
-    self.push_file_list_param(
-        'files_and_labels',
-        load_file_text='+ files')
-    self.push_file_list_param(
-        'dirs_and_labels',
-        load_dir_text='+ directory')
+    self.push_file_list_param('files_and_labels', '+ files')
+    self.push_dir_list_param('dirs_and_labels', '+ directory')
 
     self.push_spacer()
     self.push_line()
