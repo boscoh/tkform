@@ -9,7 +9,7 @@ setup(
     author='Bosco Ho',
     author_email='boscoh@gmail.com',
     url='http://github.com/boscoh/tkform',
-    description='a form-based GUI interface using tkinter to python scripts',
+    description='a tkinter form-based GUI that wraps python scripts',
     long_description=description,
     license='BSD',
     install_requires=[],

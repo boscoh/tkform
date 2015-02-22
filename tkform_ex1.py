@@ -11,19 +11,20 @@ def make_index(params):
     it json, constructs a webpage, opens the webpage, and
     exits the original form.
     """
-    import os, json, webbrowser
+    import os
+    import json
+    import webbrowser
     fname = os.path.abspath('tkform_ex2.html')
 
     # make the webpage
     template = "<h1>Tkform Params to JSON</h1><pre>%s</pre>"
     open(fname, 'w').write(template % json.dumps(params, indent=2))
-    
+
     # open the webpage
-    webbrowser.open('file://'+fname)
+    webbrowser.open('file://' + fname)
 
     # to quit the form, must use this function
     tkform.exit()
-
 
 
 # Create the form with title, width and height
@@ -34,7 +35,7 @@ form = tkform.Form(title, width, height)
 # Add some text
 form.push_text(title, 20)
 
-# And a loader for multiple files, registers a 
+# And a loader for multiple files, registers a
 # param with the dictionary key 'files_and_labels'
 # this will be returned as params in the 'run' funtion
 form.push_file_list_param('files_and_labels', '+ files')
@@ -42,14 +43,10 @@ form.push_file_list_param('files_and_labels', '+ files')
 # Must register the submit button
 form.push_submit()
 
-# When pushed the submit button will trigger `run` 
+# When pushed the submit button will trigger `run`
 # with parameters setup from above, replace with
 # our own function that takes a params dictionary
 form.run = make_index
 
 # All set up? Trigger app.
 form.mainloop()
-
-
-
-
