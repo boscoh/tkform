@@ -2,7 +2,7 @@
 
 # tkform
 
-`tkform` wraps an elegant form-based GUI around Python scripts using only standard Python.
+a cross-platform form-based GUI to run command-line utilities using standard Python.
 
 ![](./screenshot.png)
 
@@ -22,15 +22,15 @@ There are two examples provided.
 
 The first example loads a filename and sends it a webpage:
 
-    > python tkform_ex1.py
+    > python example1.py
 
 The second example shows is more involved which involve displaying output:
 
-    > python tkform_ex2.py
+    > python example2.py
 
 ### Making a Quick-and-Dirty Form
 
-Here's how to make a simple form (this is similar to `tkform_ex1.py`). 
+Here's how to make a simple form (this is similar to `example1.py`). 
 
 First some house-keeping:
 
@@ -83,7 +83,7 @@ Well it turns out standard Python provides `tkinter`, with which you could build
 
 ## How does it work?
 
-Typically, you will want to sub-class `tkform.Form` to use all the features: callback buttons, integrated text output, filename processing etc. The following is similar to the example `tkform_ex2.py`.
+Typically, you will want to sub-class `tkform.Form` to use all the features: callback buttons, integrated text output, filename processing etc. The following is similar to the example `example2.py`.
 
 ### 1. Subclassing your own Form
 
@@ -232,6 +232,23 @@ This takes a params dictionary, and for output, it writes to the function print_
 And `main_processing` lends itself to take in arguments from the command-line parameters.
         
 It's useful to wrap the python script with a unix shell script or a Windows batch file so that the end-user can double-click in the file manager.
+
+For instance we can make for `example1.py`, a batch file `example1.bat`:
+
+     python tkform1_ex1.py %1 %2 %3
+     
+And in *nix, we ca make `example1.command`:
+
+    DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+    cd $DIR
+    python example1.py $*example
+   
+Make sure the file is `chmod +c example1.command`. The extension of .command allows the MacOS finder to allow double-clicking.  Indeed, to close the window that pops after the form is closed, you need to also add, for MacOS:
+
+    if [ "$(uname)" == "Darwin" ]; then
+        echo -n -e "\033]0;example1.command\007"
+        osascript -e 'tell application "Terminal" to close (every window whose name contains "example1.command")' &
+    fi
 
 &copy; 2015, Bosco K ho.
 
