@@ -284,9 +284,14 @@ class LabeledEntry(tk.Frame):
     """
 
     def __init__(
-            self, parent, text, entry_text='',
+            self, 
+            parent, 
+            text, 
+            entry_text='',
             load_file_text=None,
-            load_dir_text=None):
+            load_dir_text=None,
+            width=None):
+
         self.parent = parent
         tk.Frame.__init__(self, parent)
         self.grid()
@@ -312,6 +317,11 @@ class LabeledEntry(tk.Frame):
             i_column += 1
 
         self.entry = tk.Entry(self, textvariable=self.stringvar)
+
+        self.width = width
+        if self.width:
+            self.entry.config(width=width)
+
         self.entry.grid(column=i_column, row=0)
 
     def load_file(self):
@@ -465,10 +475,11 @@ class Form(tk.Tk):
 
     def push_labeled_param(
             self, param_id, text, entry_text='',
-            load_file_text=None, load_dir_text=None):
+            load_file_text=None, load_dir_text=None,
+            width=None):
         entry = LabeledEntry(
             self.interior, text, entry_text, load_file_text=load_file_text,
-            load_dir_text=load_dir_text)
+            load_dir_text=load_dir_text, width=width)
         self.push_row(entry)
         self.param_entries[param_id] = entry
 

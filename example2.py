@@ -52,7 +52,7 @@ class ExampleForm(tkform.Form):
         # some text labels
         self.push_text("More Params", 16)
         self.push_labeled_param(
-            'label1', 'Enter label1', 'label')
+            'label1', 'Enter label1', 'label', width=50)
         self.push_labeled_param(
             'file2', 'Enter file2', 'default_file', load_file_text='select')
         self.push_labeled_param(
