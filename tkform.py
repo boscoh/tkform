@@ -422,6 +422,11 @@ class Form(tk.Tk):
         self.bind('<B1-Motion>', self.mouse_drag)
         self.bind('<ButtonRelease-1>', self.mouse_up)
 
+        # Make sure window starts on top
+        self.lift()
+        self.call('wm', 'attributes', '.', '-topmost', True)
+        self.after_idle(self.call, 'wm', 'attributes', '.', '-topmost', False)
+
     def mouse_down(self, event):
         for widget in reversed(self.mouse_widgets):
             if widget.contains_event(event):
