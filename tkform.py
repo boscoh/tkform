@@ -94,51 +94,42 @@ def is_event_in_widget(event, widget):
     return y0 <= y <= y1 and x0 <= x <= x1
 
 
-class LabeledEntryForList():
+class RowOfWidgets():
 
     """
-    A row that holds a labeld entry and be draggable by mouse.
-    This works intimately with ReorderableLabeledList.
+    A row that holds widgets for ReorderableList. Contains a
+    draggable numbered icon and a closing [x]
     """
 
-    def __init__(self, parent, fname, label=None):
+    def __init__(self, parent):
         self.parent = parent
 
+        self.widgets = []
+        self.custom_widgets = []
+        self.callbacks = []
+
         self.num_stringvar = tk.StringVar()
-        self.num_stringvar.set('')
-        self.num_widget = tk.Label(parent, textvariable=self.num_stringvar)
+        self.num_widget = tk.Label(
+            parent, textvariable=self.num_stringvar)
 
-        self.fname = fname
-        self.fname_widget = tk.Label(parent, text=self.fname)
+        self.delete_widget = tk.Label(parent, text=" [x]")
 
-        self.label = label
-        self.label_stringvar = tk.StringVar()
-        if self.label is None:
-            self.label_stringvar.set('')
-        else:
-            self.label_stringvar.set(label)
-            self.label_widget = tk.Entry(
-                parent, textvariable=self.label_stringvar)
+    def init_custom_widgets(self):
+        # Here's where you build widgets 
+        pass
 
-        self.delete_widget = tk.Label(parent, text="  x")
-
-    def add_to_grid(self, j):
-        self.num_stringvar.set(u'\u2195')
-        self.j = j
-        self.num_widget.grid(column=0, row=j, sticky='W')
-        self.fname_widget.grid(column=1, row=j, sticky='W')
-        if self.label is not None:
-            self.label_widget = tk.Entry(
-                self.parent, textvariable=self.label_stringvar)
-            self.label_widget.grid(column=2, row=j, sticky='W')
-        self.delete_widget.grid(column=3, row=j, sticky='W')
+    def add_to_grid(self, i_row):
+        self.num_stringvar.set(u'[\u2630 %d]' % (i_row+1) )
+        self.widgets = []
+        self.widgets.append(self.num_widget)
+        self.widgets.extend(self.custom_widgets)
+        self.widgets.append(self.delete_widget)
+        for i_widget, widget in enumerate(self.widgets):
+            widget.grid(column=i_widget, row=i_row, sticky='W')
 
     def grid_forget(self):
-        self.fname_widget.grid_forget()
-        self.delete_widget.grid_forget()
-        if self.label is not None:
-            self.label_widget.destroy()
-        self.num_widget.grid_forget()
+        for widget in self.widgets:
+            widget.grid_forget()
 
     def in_y(self, event):
         y = event.y_root
@@ -149,57 +140,61 @@ class LabeledEntryForList():
     def contains_event(self, event):
         return is_event_in_widget(event, self.num_widget)
 
+    def get(self):
+        return [callback() for callback in self.callbacks]
 
-class ReorderableLabeledList(tk.Frame):
+
+class ReorderableList(tk.Frame):
 
     """
-    This is a table that contains rows of LabeledEntryForList. The rows
+    This is a table that contains rows of RowOfWidgets. The rows
     - can be reordered by dragging on the arrow character on
     the left
     - deleted by clicking on the x on the right
-    - dynamically added to through `add_entry_label`
+    - dynamically added to through `add_row_of_widgets`
     """
 
     def __init__(self, parent):
-        self.parent = parent
         tk.Frame.__init__(self, parent)
+        self.parent = parent
         self.grid()
-        self.entries = []
+        self.rows = []
+        self.i_select = -1
 
-    def add_entry_label(self, entry, label=None):
-        param = LabeledEntryForList(self, entry, label)
-        self.entries.append(param)
+    def add_row_of_widgets(self, row_of_widgets):
+        self.rows.append(row_of_widgets)
         self.clear_frame()
         self.build_frame()
 
     def clear_frame(self):
-        for entry in self.entries:
-            entry.grid_forget()
+        for row in self.rows:
+            row.grid_forget()
 
     def delete_param(self, i):
+        print i
         self.clear_frame()
-        del self.entries[i]
+        del self.rows[i]
         self.build_frame()
 
     def get_delete_callback(self, i):
         return lambda event: self.delete_param(i)
 
     def build_frame(self):
-        for i, entry in enumerate(self.entries):
-            entry.add_to_grid(i)
-            entry.delete_widget.bind(
+        for i, row in enumerate(self.rows):
+            row.add_to_grid(i)
+            row.delete_widget.bind(
                 "<ButtonPress-1>",
                 self.get_delete_callback(i))
 
     def get_i_from_y(self, event):
-        for i, entry in enumerate(self.entries):
-            if entry.in_y(event):
+        for i, row in enumerate(self.rows):
+            if row.in_y(event):
                 return i
         return -1
 
     def get_i_from_xy(self, event):
-        for i, entry in enumerate(self.entries):
-            if entry.contains_event(event):
+        for i, row in enumerate(self.rows):
+            if row.contains_event(event):
                 return i
         return -1
 
@@ -210,16 +205,14 @@ class ReorderableLabeledList(tk.Frame):
         self.i_select = self.get_i_from_xy(event)
         if self.i_select == -1:
             return
-        entry = self.entries[self.i_select]
-        entry.num_widget.configure(background='#FF9999')
-        entry.fname_widget.configure(background='#FF9999')
+        row = self.rows[self.i_select]
+        row.num_widget.configure(background='#FF9999')
 
     def mouse_up(self, event):
         if self.i_select == -1:
             return
-        entry = self.entries[self.i_select]
-        entry.num_widget.configure(background='white')
-        entry.fname_widget.configure(background='white')
+        row = self.rows[self.i_select]
+        row.num_widget.configure(background='white')
 
     def mouse_drag(self, event):
         self.i_mouse_drag = self.get_i_from_y(event)
@@ -228,14 +221,36 @@ class ReorderableLabeledList(tk.Frame):
         if self.i_select == self.i_mouse_drag:
             return
         i, j = self.i_mouse_drag, self.i_select
-        self.entries[i], self.entries[j] = self.entries[j], self.entries[i]
+        self.rows[i], self.rows[j] = self.rows[j], self.rows[i]
         self.clear_frame()
         self.build_frame()
         self.i_select = self.i_mouse_drag
         self.i_mouse_drag = -1
 
     def get(self):
-        return [(e.fname, e.label_stringvar.get()) for e in self.entries]
+        return [e.get() for e in self.rows]
+
+
+class LabeledEntryList(ReorderableList):
+
+    def add_entry_label(self, entry, label=None):
+        row = RowOfWidgets(self)
+
+        row.entry = entry
+        row.entry_widget = tk.Label(self, text=row.entry)
+        row.custom_widgets.append(row.entry_widget)
+        row.callbacks.append(lambda: row.entry)
+
+        if  label is not None:
+            row.label = label
+            row.label_stringvar = tk.StringVar()
+            row.label_stringvar.set(label)
+            row.label_widget = tk.Entry(
+                self, textvariable=row.label_stringvar)
+            row.custom_widgets.append(row.label_widget)
+            row.callbacks.append(row.label_stringvar.get)
+
+        self.add_row_of_widgets(row)
 
 
 class HyperlinkManager:
@@ -284,9 +299,9 @@ class LabeledEntry(tk.Frame):
     """
 
     def __init__(
-            self, 
-            parent, 
-            text, 
+            self,
+            parent,
+            text,
             entry_text='',
             load_file_text=None,
             load_dir_text=None,
@@ -342,9 +357,9 @@ def fix_list(tcl_list):
     """
     if isinstance(tcl_list, list) or isinstance(tcl_list, tuple):
         return tcl_list
-    regex = r""" 
+    regex = r"""
     {.*?}   # text found in brackets
-    | \S+   # or any non-white-space characters 
+    | \S+   # or any non-white-space characters
   """
     tokens = re.findall(regex, tcl_list, re.X)
     # remove '{' from start and '}' from end of string
@@ -485,7 +500,7 @@ class Form(tk.Tk):
 
     def push_file_list_param(
             self, param_id, load_file_text, is_label=True):
-        file_list = ReorderableLabeledList(self.interior)
+        file_list = LabeledEntryList(self.interior)
 
         def load_file():
             fnames = askopenfilenames(title=load_file_text)
@@ -505,7 +520,7 @@ class Form(tk.Tk):
 
     def push_dir_list_param(
             self, param_id, load_dir_text, is_label=True):
-        file_list = ReorderableLabeledList(self.interior)
+        file_list = LabeledEntryList(self.interior)
 
         def load_dir():
             the_dir = tkFileDialog.askdirectory(title=load_dir_text)
