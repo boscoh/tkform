@@ -19,6 +19,7 @@ import collections
 
 import Tkinter as tk
 import tkFileDialog
+from idlelib.WidgetRedirector import WidgetRedirector
 
 
 class VerticalScrolledFrame(tk.Frame):
@@ -144,7 +145,7 @@ class RowOfWidgets():
         return [callback() for callback in self.callbacks]
 
 
-class ReorderableList(tk.Frame):
+class ReorderableWidgetList(tk.Frame):
 
     """
     This is a table that contains rows of RowOfWidgets. The rows
@@ -231,7 +232,7 @@ class ReorderableList(tk.Frame):
         return [e.get() for e in self.rows]
 
 
-class LabeledEntryList(ReorderableList):
+class ReorderableList(ReorderableWidgetList):
 
     def add_entry_label(self, entry, label=None):
         row = RowOfWidgets(self)
@@ -382,6 +383,17 @@ def exit():
     tk.Tk().quit()
 
 
+
+class ReadOnlyText(tk.Text):
+    def __init__(self, *args, **kwargs):
+        tk.Text.__init__(self, *args, **kwargs)
+        self.redirector = WidgetRedirector(self)
+        self.insert = \
+            self.redirector.register("insert", lambda *args, **kw: "break")
+        self.delete = \
+            self.redirector.register("delete", lambda *args, **kw: "break")
+
+
 class Form(tk.Tk):
 
     """
@@ -510,6 +522,7 @@ class Form(tk.Tk):
                 else:
                     label = None
                 file_list.add_entry_label(fname, label)
+
         load_files_button = tk.Button(
             self.interior, text=load_file_text, command=load_file)
         self.push_row(load_files_button)
@@ -529,6 +542,7 @@ class Form(tk.Tk):
             else:
                 label = None
             file_list.add_entry_label(the_dir, label)
+
         load_dir_button = tk.Button(
             self.interior, text=load_dir_text, command=load_dir)
         self.push_row(load_dir_button)
@@ -567,23 +581,19 @@ class Form(tk.Tk):
     def push_output(self):
         if self.output is not None:
             raise Error('Error: push_output has been called more than once!')
-        self.output = tk.Text(self.interior, state=tk.DISABLED)
+        self.output = ReadOnlyText(self.interior, relief=tk.FLAT, highlightthickness=0) 
         self.output_link_manager = HyperlinkManager(self.output)
         self.push_row(self.output)
 
     def clear_output(self):
         if self.output is None:
             raise Exception("Output not initialized in Form")
-        self.output.configure(state=tk.NORMAL)
-        self.output.delete(1.0, tk.END)
         self.output_str = ""
         self.update()
-        self.output.configure(state=tk.DISABLED)
 
     def print_output(self, s, cmd_fn=None):
         if self.output is None:
             raise Exception("Output not initialized in Form")
-        self.output.configure(state=tk.NORMAL)
         if cmd_fn is not None:
             link_tag = self.output_link_manager.add_new_link(cmd_fn)
             self.output.insert(tk.INSERT, s, link_tag)
@@ -591,7 +601,6 @@ class Form(tk.Tk):
             self.output.insert(tk.INSERT, s)
         self.output_str += s
         self.update()
-        self.output.configure(state=tk.DISABLED)
 
     def run(self, params):
         "Dummy method to be overriden/replaced."
