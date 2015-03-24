@@ -120,7 +120,7 @@ class RowOfWidgets():
         pass
 
     def add_to_grid(self, i_row):
-        self.num_stringvar.set(u'[\u2630 %d]' % (i_row+1) )
+        self.num_stringvar.set(u'\u2630 %d.' % (i_row+1) )
         self.widgets = []
         self.widgets.append(self.num_widget)
         self.widgets.extend(self.custom_widgets)
@@ -234,7 +234,7 @@ class ReorderableWidgetList(tk.Frame):
 
 class ReorderableList(ReorderableWidgetList):
 
-    def add_entry_label(self, entry, label=None):
+    def add_entry_label(self, entry, label=None, width=None):
         row = RowOfWidgets(self)
 
         row.entry = entry
@@ -247,7 +247,9 @@ class ReorderableList(ReorderableWidgetList):
             row.label_stringvar = tk.StringVar()
             row.label_stringvar.set(label)
             row.label_widget = tk.Entry(
-                self, textvariable=row.label_stringvar)
+                self, 
+                textvariable=row.label_stringvar,
+                width=width)
             row.custom_widgets.append(row.label_widget)
             row.callbacks.append(row.label_stringvar.get)
 
@@ -383,9 +385,11 @@ def exit():
     tk.Tk().quit()
 
 
-
 class ReadOnlyText(tk.Text):
     def __init__(self, *args, **kwargs):
+        kwargs['relief'] = tk.FLAT
+        kwargs['insertwidth'] = 0
+        kwargs['highlightthickness'] = 0
         tk.Text.__init__(self, *args, **kwargs)
         self.redirector = WidgetRedirector(self)
         self.insert = \
@@ -449,7 +453,7 @@ class Form(tk.Tk):
         self.i_row_interior = 0
 
         self.output = None
-        self.output_str = ''
+        self.output_lines = []
         self.output_link_manager = None
 
         self.param_entries = collections.OrderedDict()
@@ -581,14 +585,15 @@ class Form(tk.Tk):
     def push_output(self):
         if self.output is not None:
             raise Error('Error: push_output has been called more than once!')
-        self.output = ReadOnlyText(self.interior, relief=tk.FLAT, highlightthickness=0) 
-        self.output_link_manager = HyperlinkManager(self.output)
+        self.output = ReadOnlyText(self.interior)
         self.push_row(self.output)
+        self.output_link_manager = HyperlinkManager(self.output)
 
     def clear_output(self):
         if self.output is None:
             raise Exception("Output not initialized in Form")
-        self.output_str = ""
+        self.output.delete(1.0, tk.END)
+        self.output_str = []
         self.update()
 
     def print_output(self, s, cmd_fn=None):
@@ -599,7 +604,8 @@ class Form(tk.Tk):
             self.output.insert(tk.INSERT, s, link_tag)
         else:
             self.output.insert(tk.INSERT, s)
-        self.output_str += s
+        self.output_lines.append(s)
+        self.output.configure(height=len(self.output_lines))
         self.update()
 
     def run(self, params):
