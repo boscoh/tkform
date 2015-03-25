@@ -516,7 +516,7 @@ class Form(tk.Tk):
 
     def push_file_list_param(
             self, param_id, load_file_text, is_label=True):
-        file_list = LabeledEntryList(self.interior)
+        file_list = ReorderableList(self.interior)
 
         def load_file():
             fnames = askopenfilenames(title=load_file_text)
@@ -537,7 +537,7 @@ class Form(tk.Tk):
 
     def push_dir_list_param(
             self, param_id, load_dir_text, is_label=True):
-        file_list = LabeledEntryList(self.interior)
+        file_list = ReorderableList(self.interior)
 
         def load_dir():
             the_dir = tkFileDialog.askdirectory(title=load_dir_text)
@@ -604,7 +604,7 @@ class Form(tk.Tk):
             self.output.insert(tk.INSERT, s, link_tag)
         else:
             self.output.insert(tk.INSERT, s)
-        self.output_lines.append(s)
+        self.output_lines.extend(s.splitlines())
         self.output.configure(height=len(self.output_lines))
         self.update()
 
