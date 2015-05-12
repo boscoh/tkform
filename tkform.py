@@ -585,7 +585,8 @@ class Form(tk.Tk):
     def push_output(self):
         if self.output is not None:
             raise Error('Error: push_output has been called more than once!')
-        self.output = ReadOnlyText(self.interior)
+        self.output_width = 70
+        self.output = ReadOnlyText(self.interior, width=self.output_width)
         self.push_row(self.output)
         self.output_link_manager = HyperlinkManager(self.output)
 
@@ -596,15 +597,19 @@ class Form(tk.Tk):
         self.output_str = []
         self.update()
 
-    def print_output(self, s, cmd_fn=None):
+    def print_output(self, out_str, cmd_fn=None):
+        for line in out_str.splitlines():
+            n = self.output_width
+            sub_lines = [line[i:i+n] for i in range(0, len(line), n)]
+            self.output_lines.extend(sub_lines)
+        out_str = '\n'.join(sub_lines)
         if self.output is None:
             raise Exception("Output not initialized in Form")
         if cmd_fn is not None:
             link_tag = self.output_link_manager.add_new_link(cmd_fn)
-            self.output.insert(tk.INSERT, s, link_tag)
+            self.output.insert(tk.INSERT, out_str, link_tag)
         else:
-            self.output.insert(tk.INSERT, s)
-        self.output_lines.extend(s.splitlines())
+            self.output.insert(tk.INSERT, out_str)
         self.output.configure(height=len(self.output_lines))
         self.update()
 
