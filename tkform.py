@@ -601,6 +601,7 @@ class Form(tk.Tk):
         for line in out_str.splitlines():
             n = self.output_width
             sub_lines = [line[i:i+n] for i in range(0, len(line), n)]
+            sub_lines[-1] += "\n"
             self.output_lines.extend(sub_lines)
         out_str = '\n'.join(sub_lines)
         if self.output is None:
