@@ -598,12 +598,16 @@ class Form(tk.Tk):
         self.update()
 
     def print_output(self, out_str, cmd_fn=None):
+        # format to output width
+        new_lines = []
         for line in out_str.splitlines():
             n = self.output_width
             sub_lines = [line[i:i+n] for i in range(0, len(line), n)]
-            sub_lines[-1] += "\n"
-            self.output_lines.extend(sub_lines)
-        out_str = '\n'.join(sub_lines)
+            if sub_lines:
+              sub_lines[-1] += "\n"
+            new_lines.extend(sub_lines)
+        out_str = ''.join(new_lines)
+
         if self.output is None:
             raise Exception("Output not initialized in Form")
         if cmd_fn is not None:
@@ -611,6 +615,8 @@ class Form(tk.Tk):
             self.output.insert(tk.INSERT, out_str, link_tag)
         else:
             self.output.insert(tk.INSERT, out_str)
+
+        self.output_lines.extend(new_lines)
         self.output.configure(height=len(self.output_lines))
         self.update()
 
