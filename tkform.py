@@ -582,10 +582,10 @@ class Form(tk.Tk):
             params[param_id] = entry.get()
         return params
 
-    def push_output(self):
+    def push_output(self, width=70):
         if self.output is not None:
             raise Error('Error: push_output has been called more than once!')
-        self.output_width = 70
+        self.output_width = width
         self.output = ReadOnlyText(self.interior, width=self.output_width)
         self.push_row(self.output)
         self.output_link_manager = HyperlinkManager(self.output)
