@@ -10,23 +10,23 @@ a cross-platform form-based GUI to run command-line utilities using standard Pyt
 
 ### Installation instructions
 
-To install tkform, simply clone the project to your local directory
+To install tkform:
 
-    > git clone http://github.com/boscoh/tkform
+     pip install tkform
 
-And run setup.py
+Or download and unzip:
+
+&nbsp; &nbsp; &nbsp;  [tkform-master.zip](https://github.com/boscoh/tkform/archive/master.zip)
+
+Then install:
 
     > python setup.py install
 
-There are two examples provided. 
+### Examples
 
-The first example loads a filename and sends it a webpage:
-
-    > python example1.py
-
-The second example shows is more involved which involve displaying output:
-
-    > python example2.py
+1. `python example1.py` - loads a filename and sends it a webpage
+2. `python example2.py` - is more involved which involve displaying output
+3. `python example3.py` - shows how to customize reoderable lists
 
 ### Making a Quick-and-Dirty Form
 
@@ -67,19 +67,17 @@ Then go:
 
 ## What is it?
 
-You want to wrap a simple GUI around a command-line utility or a Python script. For usability, these properties are essential:
+You want to wrap a simple GUI around a command-line utility. As the idea of a GUI is to make it easy for end-users, you probably also want it to be:
 
-1. cross-platform
-2. native platform file-&-directory chooser
-3. easy installation for end-users
+1. cross-platform - useful for as many end-users as possible
+2. open files with native file-chooser - familiarity is important for usability
+3. easy to install - which is as important as being easy-to-use
 
-Now there are some great solutions out there, but none of them quite hit the sweet spot. One possible solution is [`gooey`](https://github.com/chriskiehl/Gooey), a clever cross-platform solution that wraps a `wxPython` GUI around Python scripts. 
+No existing solution quite satisifiy all three requirements. One solution is [`gooey`](https://github.com/chriskiehl/Gooey), which cleverly wraps a cross-platform `wxPython` GUI around Python scripts.  But sadly, it requires `wxPython`, which is difficult to install for end-users. You either need to match binary versions of `wxPython` to your Python package, or install a C compiler ecosystem. 
 
-The downfall is the installation of `wxPython`. Go to the [download page](http://www.wxpython.org/download.php), and you'll see that there are packages for a confusing number of combinations of operating systems and versions of Python. You can't reliably install `wxPython` with `pip` as it is too brittle. Installing `wxPython` will simply frustrate most of your end-users. Similar problems plague other cross-platform toolkits.
+Another solution is to run a local webbrowser. This is powerful except for one hobbling limitation. Due to the security model of the webbrowser, your  native open-file dialog will never give you full pathnames to your scripts. This severely constrains your scripts.
 
-Another solution is to run everything through a local webbrowser. I've done tons of webapps and building GUIs in the webbrowser is  powerful. However, there is one terrible limitation. Although webbrowsers provide a native open-file dialog, due to the intrinsic security model, the webbrowser will never let you pass the full pathname to the webserver. This severely limits the filenames you can use in your scripts.
-
-Well it turns out standard Python provides `tkinter`, with which you could build a cross-platform GUI with native open-file dialogs. The problem is that `tkinter` is fugly and temperamental. `tkform` is a library that cobbles together tkinter objects into a usable form to wrap command-line scripts.
+Instead, we have built `tkform` which provides a base for building a simple GUI around Python scripts that is designed for a non-technical end-user. It is designed against `tkinter`, which is bundled with Python. Your user has only to install Python, which is easy. `tkinter` provides native file-choosers, and as it's all in Python, your GUI will be cross-platform.
 
 ## How does it work?
 
@@ -97,7 +95,7 @@ Then subclass it with your ow:
         def __init__(self):
              tkform.Form.__init__(self, title, width, height)
 
-The window will appear in the top-left of the screen. The `width` and the `height` define the size of the window. You can use negative values which will set, for the `width`, to the width of the screen subtracted by the negative value. Similarly for `height`.
+The window will appear in the top-left of the screen. The `width` and the `height` define the size of the window. You can use negative values which will set, for the `width`, to the width of the screen subtracted by the negative value. Similarly for `height`. If you want to maximize the height of the window, a value of -150 seems to work across all platforms.
 
 ### 2. Creating the form - the grid model 
 
@@ -111,7 +109,7 @@ _Parameters_.  Available param types are defined by these methods:
 
         push_file_list_param(param_id, load_file_text, is_label=True)
 
-    This creates a button, which, when clicked, triggers an open file dialog box to chose multiple files. Files chosen here will pop up in a table of files. This table of files can be reordered. The file entries can be given an optional label as determined by the `is_label` flag. As well, the file entries can be removed. 
+    This creates a button, which, when clicked, triggers an open file dialog box to chose multiple files. Files chosen here will pop up in a table of files. This may include an optional label for each file as determined by the `is_label` flag. This table of files can be reordered, or removed. When the submit button is pressed, the widget will return a list of tuples in `params` of the run function. In the tuple, the first element is the filename, with an optional second element corresponding to the label.
 
 - directory list loader
 
@@ -130,6 +128,7 @@ _Parameters_.  Available param types are defined by these methods:
          push_radio_param(param_id, text_list, init_val=0)
 
      This creates a radio button from a list of options determined by a list of strings in `text_list`. The return value is an integer that refers to entries in `text_list`.
+
 - text parameter, optionally as single file/directory
 
          push_labeled_param(param_id, text, entry_text='', load_file_text=None, load_dir_text=None)
@@ -178,17 +177,15 @@ When `run` is called, it is wrapped in a try/except clause to catch errors that 
 
 ### 4. Handling output (optional)
 
-The form provides an (optional) output widget to provide feedback to the user within the form itself. The output area is registered on the form via the method:
+The form provides an (optional) output widget to provide feedback to the user within the form itself. The output area is registered on the form via the method with an optional width parameter:
 
-    self.push_output()
+    self.push_output(width=50)
 
 During the processing in `run`, you can add text:
 
     self.print_output('Processing...\n')
 
-This `print_output` does not include an implicit carriage-return, this allows you to display progressive text ouptut.
-
-You can clear the output if different stages of the processing have successfully completed:
+This `print_output` does not include an implicit carriage-return, this allows you to display progressive text ouptut. The form will automatically increase in size to display the output. You can flush the output at different stages of the processing with:
 
     self.clear_output()
 
@@ -214,7 +211,27 @@ And run it:
 
     form.mainloop()
 
-## Integrating the main processing function
+## Customizing Forms
+
+If you want to customize your own widgets then have a look at the widgets instantiated in the `Form` class.
+
+Any `tkinter` widgets can be displayed in the form by `self.push_row(my_tkinter_widget)`. This could include buttons that trigger functions or any other kind of actions.
+
+To add key-value pairs to the `params` that is generated when the submit button is pressed, you must add an object to the `self.param_entries` dictionary:
+	
+    self.param_entries[param_id] = entry
+
+The value `entry` must have a `get` method that returns a json compatible data structure (lists, dictionaries, strings and numbers).
+
+## Customizing Reorderable Lists
+
+One feature that `tkform` provides is the ability to preload a list of items before the `submit` button is pressed. An example is the widget generated with the `push_file_list_param` method. This list can be reordered, or truncated, and labels can be attached to them.
+
+To generated your own editable list, you can create your own widgets based on the `ReorderableList` class. On initialization, you must instantiate an `ReorderableList` on the page. Then you create a button that that triggers an action (say an open file dialog), which will populate your `ReorderableList`. This shows up on the page instantaneously. As well, you must provide an object to return in the `self.param_entries` dictionary. The `ReorderableList` serves this function, with its default `get` method. But you can certainly substitute your own. 
+
+Anyway, check out  `example3.py` to see how a customized `ReorderableList` is built.
+
+## Processing the submit button
 
 It's very easy to work the GUI as optional feature within a command-line Python script. If you parameterise the main function in the form:
 
@@ -230,6 +247,8 @@ This takes a params dictionary, and for output, it writes to the function print_
              main_processing(params, self.output)
 
 And `main_processing` lends itself to take in arguments from the command-line parameters.
+
+## Making scripts clickable for the End User
         
 It's useful to wrap the python script with a unix shell script or a Windows batch file so that the end-user can double-click in the file manager.
 
@@ -250,5 +269,12 @@ Make sure the file is `chmod +c example1.command`. The extension of .command all
         osascript -e 'tell application "Terminal" to close (every window whose name contains "example1.command")' &
     fi
 
-&copy; 2015, Bosco K ho.
+## Changelog
+
+1.0 (June 2015)
+
+- ReorderableList abstraction
+- Output auto-sizing
+
+&copy; Bosco K ho.
 

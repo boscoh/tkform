@@ -5,7 +5,7 @@ description = "Docs at http://github.com/boscoh/tkform"
 
 setup(
     name='tkform',
-    version='0.9',
+    version='1.0',
     author='Bosco Ho',
     author_email='boscoh@gmail.com',
     url='http://github.com/boscoh/tkform',
