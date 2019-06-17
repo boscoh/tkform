@@ -163,7 +163,7 @@ When the submit button is clicked, `tkform` will extract the parameters from all
 In the `Form` class, this is a dummy method that needs to be overriden:
 
     self.run(params):
-      # Do your thing with params or run an an external function
+      # Do your thing with params or run an external function
 
 At the end of `run` you have a choice:
 
